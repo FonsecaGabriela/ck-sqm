@@ -1,6 +1,11 @@
 package com.github.mauricioaniche.ck;
 
+import com.github.mauricioaniche.ck.metric.TightClassCohesion;
+import com.google.common.collect.Sets;
 import java.util.*;
+import java.util.stream.Collectors;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 public class CKClassResult {
 
@@ -468,6 +473,31 @@ public class CKClassResult {
 	@Override
 	public int hashCode() {
 		return Objects.hash(file, className, type);
+	}
+
+	public Set<ImmutablePair<String, String>> getIndirectConnections(
+			Set<ImmutablePair<String, String>> directConnections, TightClassCohesion tightClassCohesion) {
+		HashMap<String, Set<String>> directConnectionsMap = new HashMap<>();
+		for (CKMethodResult method : getMethods()) {
+			directConnectionsMap.put(method.getMethodName(),
+					Sets.newHashSet(Sets.newHashSet(ArrayUtils.EMPTY_STRING_ARRAY)));
+		}
+		for (ImmutablePair<String, String> pair : directConnections) {
+			directConnectionsMap.get(pair.left).add(pair.right);
+		}
+		HashMap<String, Set<String>> indirectConnectionsMap = new HashMap<>();
+		for (CKMethodResult method : getVisibleMethods()) {
+			Set<String> localConnections = tightClassCohesion.extractConnections(method.getMethodName(),
+					new HashSet<>(), directConnectionsMap);
+			indirectConnectionsMap.put(method.getMethodName(), localConnections);
+		}
+		Set<ImmutablePair<String, String>> indirectConnections = new HashSet<>();
+		for (String key : indirectConnectionsMap.keySet()) {
+			indirectConnections.addAll(indirectConnectionsMap.get(key).stream().filter(right -> !key.equals(right))
+					.map(right -> new ImmutablePair<String, String>(key, right)).collect(Collectors.toSet()));
+		}
+		indirectConnections.removeAll(directConnections);
+		return indirectConnections;
 	}
 
 }

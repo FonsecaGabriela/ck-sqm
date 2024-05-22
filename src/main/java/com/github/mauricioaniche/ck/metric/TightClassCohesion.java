@@ -59,43 +59,10 @@ public class TightClassCohesion implements CKASTVisitor, ClassLevelMetric {
         return allLocalFields;
     }
 
-    //Two methods are indirectly connected if:
-    //1. they are not directly connected
-    //2. they are connected via other methods, e.g. X -> Y -> Z
-    private Set<ImmutablePair<String, String>> getIndirectConnections(CKClassResult result, Set<ImmutablePair<String, String>> directConnections){
-        //convert the direct connections into a Map in order to simplify the usage
-        HashMap<String, Set<String>> directConnectionsMap = new HashMap<>();
-        for(CKMethodResult method : result.getMethods()){
-            directConnectionsMap.put(method.getMethodName(), Sets.newHashSet(Sets.newHashSet(ArrayUtils.EMPTY_STRING_ARRAY)));
-        }
-        for(ImmutablePair<String, String> pair : directConnections){
-            directConnectionsMap.get(pair.left).add(pair.right);
-        }
-
-        //extract all direct and indirect connections between methods from the direct connections
-        HashMap<String, Set<String>> indirectConnectionsMap = new HashMap<>();
-        for (CKMethodResult method : result.getVisibleMethods()){
-            Set<String> localConnections = extractConnections(method.getMethodName(), new HashSet<>(), directConnectionsMap);
-            indirectConnectionsMap.put(method.getMethodName(), localConnections);
-        }
-
-        //map the indirect connections into connection pairs
-        Set<ImmutablePair<String, String>> indirectConnections = new HashSet<>();
-        for(String key : indirectConnectionsMap.keySet()){
-            indirectConnections.addAll(indirectConnectionsMap.get(key).stream()
-                    .filter(right -> !key.equals(right))
-                    .map(right -> new ImmutablePair<String, String>(key, right))
-                    .collect(Collectors.toSet()));
-        }
-        //remove all direct connections
-        indirectConnections.removeAll(directConnections);
-        return indirectConnections;
-    }
-
     //Recursively extract all indirect connections between methods starting with the given method
     //Explored contains all previously explored connections
     //connections contains all direct method connections of interest
-    private Set<String> extractConnections(String currentConnection, Set<String> explored, HashMap<String, Set<String>> connections){
+    public Set<String> extractConnections(String currentConnection, Set<String> explored, HashMap<String, Set<String>> connections){
         explored.add(currentConnection);
 
         //only explore connections that were not previously explored
@@ -125,7 +92,7 @@ public class TightClassCohesion implements CKASTVisitor, ClassLevelMetric {
             result.setTightClassCohesion(directConnections.size() / np);
 
             //number of indirect connections in this class
-            Set<ImmutablePair<String, String>> indirectConnections = getIndirectConnections(result, directConnections);
+            Set<ImmutablePair<String, String>> indirectConnections = result.getIndirectConnections(directConnections, this);
             result.setLooseClassCohesion((directConnections.size() + indirectConnections.size()) / np);
         }
     }
