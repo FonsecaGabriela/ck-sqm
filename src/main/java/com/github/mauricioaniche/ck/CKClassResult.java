@@ -9,6 +9,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 public class CKClassResult {
 
+	private Method method = new Method();
+	private VisibleMethods visibleMethods = new VisibleMethods();
 	private String file;
 	private String className;
 	private String type;
@@ -22,8 +24,6 @@ public class CKClassResult {
 	private int nosi;
 	private int loc;
 	
-	private Set<CKMethodResult> methods;
-	private Set<CKMethodResult> visibleMethods;
 	private Set<String> fieldNames;
 	private int returnQty;
 	private int loopQty;
@@ -67,8 +67,8 @@ public class CKClassResult {
 		this.file = file;
 		this.className = className;
 		this.type = type;
-		this.methods = new HashSet<>();
-		this.visibleMethods= new HashSet<>();
+		method.setMethods(new HashSet<>());
+		visibleMethods.setVisibleMethods(new HashSet<>());
 		this.modifiers = modifiers;
 	}
 
@@ -152,22 +152,22 @@ public class CKClassResult {
 	}
 
 	public void addMethod(CKMethodResult method) {
-		this.methods.add(method);
+		this.method.getMethods2().add(method);
 		if(method.getIsVisible()){
-			visibleMethods.add(method);
+			visibleMethods.getVisibleMethods2().add(method);
 		}
 	}
 
 	public Set<CKMethodResult> getMethods() {
-		return Collections.unmodifiableSet(methods);
+		return method.getMethods();
 	}
 
 	public Set<CKMethodResult> getVisibleMethods() {
-		return Collections.unmodifiableSet(visibleMethods);
+		return visibleMethods.getVisibleMethods();
 	}
 
 	public Optional<CKMethodResult> getMethod(String methodName) {
-		return methods.stream().filter(m -> m.getMethodName().equals(methodName)).findFirst();
+		return method.getMethod(methodName);
 	}
 
 	public void setFieldNames(Set<String> fieldNames){ this.fieldNames = fieldNames;}
@@ -362,7 +362,7 @@ public class CKClassResult {
 		this.numberOfSynchronizedMethods = numberOfSynchronizedMethods;
 	}
 
-	public int getNumberOfVisibleMethods() { return visibleMethods.size();	}
+	public int getNumberOfVisibleMethods() { return visibleMethods.getNumberOfVisibleMethods();	}
 
 	public int getNumberOfSynchronizedMethods() {
 		return numberOfSynchronizedMethods;
@@ -478,7 +478,7 @@ public class CKClassResult {
 	public Set<ImmutablePair<String, String>> getIndirectConnections(
 			Set<ImmutablePair<String, String>> directConnections, TightClassCohesion tightClassCohesion) {
 		HashMap<String, Set<String>> directConnectionsMap = new HashMap<>();
-		for (CKMethodResult method : getMethods()) {
+		for (CKMethodResult method : method.getMethods()) {
 			directConnectionsMap.put(method.getMethodName(),
 					Sets.newHashSet(Sets.newHashSet(ArrayUtils.EMPTY_STRING_ARRAY)));
 		}
@@ -486,7 +486,7 @@ public class CKClassResult {
 			directConnectionsMap.get(pair.left).add(pair.right);
 		}
 		HashMap<String, Set<String>> indirectConnectionsMap = new HashMap<>();
-		for (CKMethodResult method : getVisibleMethods()) {
+		for (CKMethodResult method : visibleMethods.getVisibleMethods()) {
 			Set<String> localConnections = tightClassCohesion.extractConnections(method.getMethodName(),
 					new HashSet<>(), directConnectionsMap);
 			indirectConnectionsMap.put(method.getMethodName(), localConnections);

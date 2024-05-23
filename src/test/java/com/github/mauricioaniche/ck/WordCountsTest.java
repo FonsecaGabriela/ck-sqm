@@ -7,8 +7,7 @@ import java.util.Map;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class WordCountsTest extends BaseTest {
 
-	private CKClassResult w1;
-	private CKClassResult w2;
+	private WordCountsTestProduct wordCountsTestProduct = new WordCountsTestProduct();
 	private CKClassResult w3;
 
 	@BeforeAll
@@ -18,29 +17,25 @@ public class WordCountsTest extends BaseTest {
 	
 	@BeforeEach
 	public void getClasses() {
-		this.w1 = report.get("wordcounts.WordCounts");
-		this.w2 = report.get("wordcounts.WordCounts2");
+		wordCountsTestProduct.setW1(report.get("wordcounts.WordCounts"));
+		wordCountsTestProduct.setW2(report.get("wordcounts.WordCounts2"));
 		this.w3 = report.get("wordcounts.WordCounts3");
 	}
 
 	@Test
 	public void count() {
-		Assertions.assertEquals(1, w1.getMethod("m1/0").get().getUniqueWordsQty());
-		Assertions.assertEquals(7, w1.getMethod("m2/0").get().getUniqueWordsQty());
+		wordCountsTestProduct.count();
 	}
 
 	// related to issue #33
 	@Test
 	public void countStaticInitializer() {
-		Assertions.assertEquals(1, w2.getMethod("m1/0").get().getUniqueWordsQty());
-		Assertions.assertEquals(7, w2.getMethod("m2/0").get().getUniqueWordsQty());
-		Assertions.assertEquals(3, w2.getMethod("(initializer 1)").get().getUniqueWordsQty());
+		wordCountsTestProduct.countStaticInitializer();
 	}
 
 	@Test
 	public void countAtClassLevel() {
-		Assertions.assertEquals(10, w1.getUniqueWordsQty());
-		Assertions.assertEquals(13, w2.getUniqueWordsQty());
+		wordCountsTestProduct.countAtClassLevel();
 	}
 
 	// related to issue #34

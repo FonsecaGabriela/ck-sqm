@@ -5,6 +5,7 @@ import org.eclipse.jdt.core.dom.Modifier;
 import java.util.*;
 
 public class CKMethodResult {
+	private Field field = new Field();
 	private int cbo;
 	private int rfc;
 	private int wmc;
@@ -30,8 +31,6 @@ public class CKMethodResult {
 	private int innerClassesQty;
 	private int lambdasQty;
 	private int uniqueWordsQty;
-	//all local field accesses
-	private Map<String, Integer> fieldUsage;
 	private boolean isConstructor;
 	private int modifiers;
 	private int logStatementsQty;
@@ -262,21 +261,15 @@ public class CKMethodResult {
 	}
 
 	public void setFieldUsage(Map<String, Integer> fieldUsage) {
-		this.fieldUsage = fieldUsage;
+		field.setFieldUsage(fieldUsage);
 	}
 
 	public Map<String, Integer> getFieldUsage() {
-		if(this.fieldUsage==null)
-			fieldUsage = new HashMap<>();
-
-		return fieldUsage;
+		return field.getFieldUsage();
 	}
 
 	public Set<String> getFieldsAccessed() {
-		if(this.fieldUsage==null)
-			fieldUsage = new HashMap<>();
-
-		return fieldUsage.keySet();
+		return field.getFieldsAccessed();
 	}
 
 	public boolean isConstructor() {
