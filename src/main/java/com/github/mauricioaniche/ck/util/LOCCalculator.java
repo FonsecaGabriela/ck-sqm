@@ -48,26 +48,22 @@ public class LOCCalculator {
 	 *        goto Start
 	 * End: print count
 	 */
-	private static int getNumberOfLines(BufferedReader bReader)
-			throws IOException {
+	private static int getNumberOfLines(BufferedReader bReader) throws IOException {
 		int count = 0;
 		boolean commentBegan = false;
-		String line = null;
-
+		String line;
+	
 		while ((line = bReader.readLine()) != null) {
 			line = line.trim();
-			if ("".equals(line) || line.startsWith("//")) {
+			if (shouldSkipLine(line, commentBegan)) {
 				continue;
 			}
 			if (commentBegan) {
-				if (commentEnded(line)) {
-					line = line.substring(line.indexOf("*/") + 2).trim();
-					commentBegan = false;
-					if ("".equals(line) || line.startsWith("//")) {
-						continue;
-					}
-				} else
+				line = handleEndOfComment(line);
+				commentBegan = false;
+				if (shouldSkipLine(line, commentBegan)) {
 					continue;
+				}
 			}
 			if (isSourceCodeLine(line)) {
 				count++;
@@ -77,6 +73,17 @@ public class LOCCalculator {
 			}
 		}
 		return count;
+	}
+	
+	private static boolean shouldSkipLine(String line, boolean commentBegan) {
+		return "".equals(line) || line.startsWith("//") || (commentBegan && !commentEnded(line));
+	}
+	
+	private static String handleEndOfComment(String line) {
+		if (commentEnded(line)) {
+			return line.substring(line.indexOf("*/") + 2).trim();
+		}
+		return line;
 	}
 
 	/**
@@ -138,10 +145,9 @@ public class LOCCalculator {
 	 * This method will work only if we are sure that comment has not already begun previously. Hence, this method should be called only after {@link #commentBegan(String)} is called
 	 */
 	private static boolean isSourceCodeLine(String line) {
-		boolean isSourceCodeLine = false;
 		line = line.trim();
-		if ("".equals(line) || line.startsWith("//")) {
-			return isSourceCodeLine;
+		if (isTrivialLine(line)) {
+			return false;
 		}
 		if (line.length() == 1) {
 			return true;
@@ -149,32 +155,38 @@ public class LOCCalculator {
 		int index = line.indexOf("/*");
 		if (index != 0) {
 			return true;
-		} else {
-			while (line.length() > 0) {
-				line = line.substring(index + 2);
-				int endCommentPosition = line.indexOf("*/");
-				if (endCommentPosition < 0) {
-					return false;
-				}
-				if (endCommentPosition == line.length() - 2) {
-					return false;
-				} else {
-					String subString = line.substring(endCommentPosition + 2)
-							.trim();
-					if ("".equals(subString) || subString.indexOf("//") == 0) {
-						return false;
-					} else {
-						if (subString.startsWith("/*")) {
-							line = subString;
-							continue;
-						}
-						return true;
-					}
-				}
-
-			}
 		}
-		return isSourceCodeLine;
+		return processLineWithComment(line);
+	}
+	
+	private static boolean isTrivialLine(String line) {
+		return "".equals(line) || line.startsWith("//");
+	}
+	
+	private static boolean processLineWithComment(String line) {
+		while (line.length() > 0) {
+			int endCommentPosition = line.indexOf("*/");
+			if (endCommentPosition < 0) {
+				return false;
+			}
+			if (isEndOfLineComment(endCommentPosition, line)) {
+				return false;
+			}
+			line = line.substring(endCommentPosition + 2).trim();
+			if (isTrivialLine(line)) {
+				return false;
+			}
+			if (line.startsWith("/*")) {
+				line = line.substring(2);
+				continue;
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private static boolean isEndOfLineComment(int endCommentPosition, String line) {
+		return endCommentPosition == line.length() - 2;
 	}
 
 }
