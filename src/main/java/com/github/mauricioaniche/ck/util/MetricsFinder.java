@@ -25,7 +25,7 @@ public class MetricsFinder {
 
 	public List<MethodLevelMetric> allMethodLevelMetrics(boolean variablesAndFields) {
 		if(methodLevelClasses == null)
-			loadMethodLevelClasses(variablesAndFields);
+			loadMethodLevelClasses(variablesAndFields, sorter);
 
 		try {
 			ArrayList<MethodLevelMetric> metrics = new ArrayList<>();
@@ -42,7 +42,7 @@ public class MetricsFinder {
 	public List<ClassLevelMetric> allClassLevelMetrics() {
 
 		if(classLevelClasses == null)
-			loadClassLevelClasses();
+			loadClassLevelClasses(sorter);
 
 		try {
 			ArrayList<ClassLevelMetric> metrics = new ArrayList<>();
@@ -56,7 +56,7 @@ public class MetricsFinder {
 		}
 	}
 
-	private void loadMethodLevelClasses(boolean variablesAndFields) {
+	private static void loadMethodLevelClasses(boolean variablesAndFields, DependencySorter sorter) {
 		try {
 			Reflections reflections = new Reflections("com.github.mauricioaniche.ck.metric");
 
@@ -69,7 +69,7 @@ public class MetricsFinder {
 		}
 	}
 
-	private void loadClassLevelClasses() {
+	private static void loadClassLevelClasses(DependencySorter sorter) {
 		try {
 			Reflections reflections = new Reflections("com.github.mauricioaniche.ck.metric");
 			classLevelClasses = sorter.sort(new ArrayList<>(reflections.getSubTypesOf(ClassLevelMetric.class)));
